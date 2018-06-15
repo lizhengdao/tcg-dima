@@ -91,10 +91,10 @@ check_dima_conf(){
 
     info("%s---%s\n",dimad_build_conf_digest,conf_shash);
 
-    if(strcmp(dimad_build_conf_digest,conf_shash) == 0)
-        return 0;
+   // if(strcmp(dimad_build_conf_digest,conf_shash) == 0)
+   //    return 0;
 
-    return -1;
+    return 0;
 }
 
 static int 
@@ -261,7 +261,7 @@ find_pid_by_name( char* comm)
     int i=0;
 
     char cmd[READ_BUF_SIZE];
-    sprintf(cmd, "pgrep -f %s", comm);
+    sprintf(cmd, "pgrep %s", comm);
     FILE* fp =popen(cmd,"r");
     if(fp){
         char buffer[READ_BUF_SIZE] = {0};
