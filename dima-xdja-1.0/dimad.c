@@ -13,7 +13,7 @@
 
 #define DIMA_SET_MEASUREMENT_MODE_CMD _IOW('d', 1, int)
 #define DIMA_MEASUREMENT_PROCESS_CMD    _IOW('d', 2, int)
-#define DIMA_MEASUREMENT_MODULE_CMD	   _IOW('d', 3, char[MODULE_NAME_LEN])
+#define DIMA_MEASUREMENT_MODULE_CMD       _IOW('d', 3, char[MODULE_NAME_LEN])
 #define DIMA_SET_MEASUREMENT_LOCK_MODE_CMD        _IO('d', 4)
 #define DIMA_SET_MEASUREMENT_UNLOCK_MODE_CMD    _IO('d', 5)
 
@@ -62,19 +62,19 @@ strtrim(char *s) {
 static void
 dima_digest_dump(unsigned char *data, int len,char* out)
 {
-	int i;
-	int nlen =0;
+    int i;
+    int nlen =0;
 
     out[0] = '0';
     out[1] = '1';
     nlen += 2;
 
-	for (i = 0; i < len; i++){
-		sprintf(out+nlen,"%02x", data[i]);
-		nlen += 2;
-	}
+    for (i = 0; i < len; i++){
+        sprintf(out+nlen,"%02x", data[i]);
+        nlen += 2;
+    }
 
-	out[nlen] = '\0';
+    out[nlen] = '\0';
 }
 
 static int
@@ -84,7 +84,7 @@ check_dima_conf(){
     char conf_shash[256];
 
     conf_hashlen = ima_calc_hash(CONF_PATH, conf_hash);
-	if (conf_hashlen <= 1)
+    if (conf_hashlen <= 1)
         return -1;
     
     dima_digest_dump(conf_hash,conf_hashlen,conf_shash);
@@ -317,104 +317,104 @@ dyn_measurement_process(int fd)
 static int
 write_pid_file(void)
 {
-	int pidfd, len;
+    int pidfd, len;
     char val[16];
 
     if (do_fork == 0)
         return 0;
 
-	len = snprintf(val, sizeof(val), "%u\n", getpid());
-	if (len <= 0) {
-		pidfile = 0;
-		return -1;
-	}
-	pidfd = open(pidfile, O_CREAT | O_TRUNC | O_NOFOLLOW | O_WRONLY, 0644);
-	if (pidfd < 0) {
-		pidfile = 0;
-		return -1;
-	}
-	if (write(pidfd, val, (unsigned int)len) != len) {
-		close(pidfd);
-		pidfile = 0;
-		return -1;
-	}
-	close(pidfd);
-	return 0;
+    len = snprintf(val, sizeof(val), "%u\n", getpid());
+    if (len <= 0) {
+        pidfile = 0;
+        return -1;
+    }
+    pidfd = open(pidfile, O_CREAT | O_TRUNC | O_NOFOLLOW | O_WRONLY, 0644);
+    if (pidfd < 0) {
+        pidfile = 0;
+        return -1;
+    }
+    if (write(pidfd, val, (unsigned int)len) != len) {
+        close(pidfd);
+        pidfile = 0;
+        return -1;
+    }
+    close(pidfd);
+    return 0;
 }
 
 static int become_daemon(void)
 {
-	int fd, rc;
-	pid_t pid;
+    int fd, rc;
+    pid_t pid;
     int status;
 
     if (do_fork == 0)
         return 0;
 
-	if (pipe(init_pipe) || 
+    if (pipe(init_pipe) || 
         fcntl(init_pipe[0], F_SETFD, FD_CLOEXEC) ||
         fcntl(init_pipe[0], F_SETFD, FD_CLOEXEC))
         return -1;
 
     pid = fork();
-	switch (pid)
-	{
-		case 0:
-			/* No longer need this...   */
-			close(init_pipe[0]);
+    switch (pid)
+    {
+        case 0:
+            /* No longer need this...   */
+            close(init_pipe[0]);
 
-			/* Open stdin,out,err to /dev/null */
-			fd = open("/dev/null", O_RDWR);
-			if (fd < 0) {
-				return -1;
+            /* Open stdin,out,err to /dev/null */
+            fd = open("/dev/null", O_RDWR);
+            if (fd < 0) {
+                return -1;
             }
 
-			if ((dup2(fd, 0) < 0) || (dup2(fd, 1) < 0) ||
-							(dup2(fd, 2) < 0)) {
-				close(fd);
-				return -1;
-			}
-			close(fd);
+            if ((dup2(fd, 0) < 0) || (dup2(fd, 1) < 0) ||
+                            (dup2(fd, 2) < 0)) {
+                close(fd);
+                return -1;
+            }
+            close(fd);
 
-			/* Change to '/' */
-			rc = chdir("/");
-			if (rc < 0) {
-				return -1;
-			}
+            /* Change to '/' */
+            rc = chdir("/");
+            if (rc < 0) {
+                return -1;
+            }
 
-			/* Become session/process group leader */
-			setsid();
-			break;
-		case -1:
-			return -1;
-			break;
-		default:
-			/* Wait for the child to say its done */
-			rc = read(init_pipe[0], &status, sizeof(status));
-			if (rc < 0)
-				return -1;
+            /* Become session/process group leader */
+            setsid();
+            break;
+        case -1:
+            return -1;
+            break;
+        default:
+            /* Wait for the child to say its done */
+            rc = read(init_pipe[0], &status, sizeof(status));
+            if (rc < 0)
+                return -1;
 
-			/* Success - die a happy death */
-			if (status == SUCCESS)
-				_exit(0);
-			else
-				return -1;
-			break;
-	}
+            /* Success - die a happy death */
+            if (status == SUCCESS)
+                _exit(0);
+            else
+                return -1;
+            break;
+    }
 
-	return 0;
+    return 0;
 }
 
 static 
 void tell_parent(int status)
 {
-	int rc;
+    int rc;
 
-	if (do_fork == 0)
+    if (do_fork == 0)
         return;
 
-	do {
-		rc = write(init_pipe[1], &status, sizeof(status));
+    do {
+        rc = write(init_pipe[1], &status, sizeof(status));
     } while (rc < 0 && errno == EINTR);
     
     close(init_pipe[1]);
@@ -489,7 +489,7 @@ static struct option long_opts[] = {
     { "measuremode", required_argument, NULL, 'O' },
     { "fork", no_argument, NULL, 'F' },
     { "time", required_argument, NULL, 'T' },
-    { 0 },	/* NULL terminated */
+    { 0 },    /* NULL terminated */
 };
 
 subcommand_t subcommand_dimad = {
