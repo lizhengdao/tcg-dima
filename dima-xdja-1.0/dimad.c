@@ -9,14 +9,6 @@
 
 #define DIMA_NAME_LEN 100
 
-#define MODULE_NAME_LEN (64 - sizeof(unsigned long))
-
-#define DIMA_SET_MEASUREMENT_MODE_CMD _IOW('d', 1, int)
-#define DIMA_MEASUREMENT_PROCESS_CMD    _IOW('d', 2, int)
-#define DIMA_MEASUREMENT_MODULE_CMD       _IOW('d', 3, char[MODULE_NAME_LEN])
-#define DIMA_SET_MEASUREMENT_LOCK_MODE_CMD        _IO('d', 4)
-#define DIMA_SET_MEASUREMENT_UNLOCK_MODE_CMD    _IO('d', 5)
-
 #define DIMA_MODE_PROCESS 1
 #define DIMA_MODE_MODULE 2
 
@@ -295,7 +287,7 @@ dyn_measurement_process(int fd)
                 int pid = (int)pids[n];
                 err = ioctl(fd,DIMA_MEASUREMENT_PROCESS_CMD,(unsigned long)&pid);
                 info("Measurement pid=%d status=%d \n",pid,err);
-                
+
                 n++;
             }
 
@@ -369,8 +361,7 @@ static int become_daemon(void)
                 return -1;
             }
 
-            if ((dup2(fd, 0) < 0) || (dup2(fd, 1) < 0) ||
-                            (dup2(fd, 2) < 0)) {
+            if ((dup2(fd, 0) < 0) || (dup2(fd, 1) < 0) || (dup2(fd, 2) < 0)) {
                 close(fd);
                 return -1;
             }
@@ -464,6 +455,12 @@ run_dimad(char *prog)
     }
 
     tell_parent(SUCCESS);
+
+    errno = 0;
+    err = nice((int)-4);
+    if (err == -1 && errno) {
+        err("Cannot change priority %s (%d)\n",strerror(errno),errno);
+    }
 
     do{
         info("----------------- \n");

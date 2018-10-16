@@ -25,6 +25,16 @@
 #include <sys/wait.h>
 #include <sys/syscall.h>
 #include <linux/limits.h>
+#include <sys/ioctl.h>
+
+
+#define MODULE_NAME_LEN (64 - sizeof(unsigned long))
+
+#define DIMA_SET_MEASUREMENT_MODE_CMD _IOW('d', 1, int)
+#define DIMA_MEASUREMENT_PROCESS_CMD    _IOW('d', 2, int)
+#define DIMA_MEASUREMENT_MODULE_CMD       _IOW('d', 3, char[MODULE_NAME_LEN])
+#define DIMA_SET_MEASUREMENT_LOCK_MODE_CMD        _IO('d', 4)
+#define DIMA_SET_MEASUREMENT_UNLOCK_MODE_CMD    _IO('d', 5)
 
 #define dimad_assert(condition, fmt, ...)	\
 do {	\
