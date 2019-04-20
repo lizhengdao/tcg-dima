@@ -8,10 +8,10 @@ CFLAGS += -DVERSION=\"$(VERSION)\"
 
 TOPDIR       :=
 DESTDIR     :=
-DIMADIR     := /usr/sbin/xdja/dima
+DIMADIR     := /usr/sbin/private/dima
 SERVICEDIR := /usr/lib/systemd/system
 
-SERVICE_NAME := dima-xdja.service
+SERVICE_NAME := dima.service
 BIN_NAME        := dima-d
 CONF_NAME     := dima.conf
 

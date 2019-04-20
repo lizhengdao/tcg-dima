@@ -3,6 +3,7 @@
 #include <linux/fs.h>
 #include <linux/mutex.h>
 #include <linux/file.h>
+#include <linux/capability.h>
 #include "dima.h"
 
 char* dima_hash = "sm3";
@@ -39,6 +40,9 @@ static long dima_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
 	int ret = 0;
 	void __user *argp = (void __user *) arg;
+
+	if(current_cred()->user_ns != &init_user_ns)
+		return -EPERM;
 
 	mutex_lock(&dima_mutex);
 

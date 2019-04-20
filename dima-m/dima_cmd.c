@@ -109,8 +109,11 @@ static int cmp_dima_list(pid_t pid,const char* name,int mode,const char* comm,co
 	return CMD_ERR_OK;
 }
 
-static int dima_calc_buffer_hash(char * data, unsigned long len, u8 *digest)
+static int dima_calc_module_buffer_hash(struct module *mod, u8 *digest)
 {
+	int rc;
+	unsigned int offset = 0;
+	unsigned int len = 0;
 	struct {
 		struct shash_desc shash;
 		char ctx[crypto_shash_descsize(dima_shash_tfm)];
@@ -119,7 +122,55 @@ static int dima_calc_buffer_hash(char * data, unsigned long len, u8 *digest)
 	desc.shash.tfm = dima_shash_tfm;
 	desc.shash.flags = 0;
 
-	return crypto_shash_digest(&desc.shash, data, len, digest);
+	rc = crypto_shash_init(&desc.shash);
+	if (rc != 0)
+		return rc;
+
+	// s -> init
+	offset = 0;
+	len = mod->init_text_size;
+	while (offset < len) {
+		int rlen;
+
+		if((len-offset) > PAGE_SIZE){
+			rlen = PAGE_SIZE;
+		}else{
+			rlen = (len-offset);
+		}
+
+		rc = crypto_shash_update(&desc.shash, mod->module_init+offset, rlen);
+		if (rc){
+			pr_err("Can not hash data err %d \n",rc);
+			break;
+		}
+
+		offset += rlen;
+	}
+
+	// s -> core
+	offset = 0;
+	len = mod->core_text_size;
+	while (offset < len) {
+		int rlen;
+
+		if((len-offset) > PAGE_SIZE){
+			rlen = PAGE_SIZE;
+		}else{
+			rlen = (len-offset);
+		}
+
+		rc = crypto_shash_update(&desc.shash, mod->module_core+offset, rlen);
+		if (rc){
+			pr_err("Can not hash data err %d \n",rc);
+			break;
+		}
+
+		offset += rlen;
+	}
+
+	if (!rc)
+		rc = crypto_shash_final(&desc.shash, digest);
+	return rc;
 }
 
 static int dima_calc_task_buffer_hash(struct task_struct *tsk, unsigned long index, unsigned long len, u8 *digest)
@@ -246,7 +297,7 @@ static int dima_calc_module_by_name(const char* name, char* comm, u8* digest)
 		goto out_put;
 	}
 
-	if((ret = dima_calc_buffer_hash(mod->module_core, mod->core_size,digest))){
+	if((ret = dima_calc_module_buffer_hash(mod, digest))){
 		pr_err("dima module calc hash err = %d \n",ret);
 		goto out_put;
 	}
