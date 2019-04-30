@@ -414,7 +414,7 @@ void tell_parent(int status)
 static int
 run_dimad(char *prog)
 {
-    int fd;
+    int fd,oomfd;
     int err;
     int count = 0;
 
@@ -460,6 +460,14 @@ run_dimad(char *prog)
     err = nice((int)-4);
     if (err == -1 && errno) {
         err("Cannot change priority %s (%d)\n",strerror(errno),errno);
+    }
+
+    errno = 0;
+    if ((oomfd = open("/proc/self/oom_adj", O_RDWR)) >= 0) {
+        write(oomfd, "-17", 3);
+        close(oomfd);
+    }else{
+        err("Cannot change oom %s (%d)\n",strerror(errno),errno);
     }
 
     do{
